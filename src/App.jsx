@@ -1,5 +1,6 @@
 import { useState } from "react";
 import EuropaMap from "./EuropaMap.jsx";
+import Fichas from "./Fichas.jsx";
 
 const regions = [
   { name: "Europa del Este", emoji: "🇷🇴", color: "#e63946", premium: false, clues: [
@@ -107,7 +108,7 @@ export default function App() {
 
       <div style={{ maxWidth: 480, margin: "0 auto" }}>
         <div style={{ display: "flex", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          {[["lessons","Lecciones"],["mapa","Mapa"],["quiz","Quiz"],["stats","Stats"]].map(([id,label]) => (
+          {[["lessons","Lecciones"],["mapa","Mapa"],["fichas","Fichas"],["quiz","Quiz"],["stats","Stats"]].map(([id,label]) => (
             <button key={id} onClick={() => { setTab(id); setSelectedRegion(null); }} style={{ flex: 1, padding: "11px 2px", fontSize: 12, color: tab===id ? "#e8e0d0" : "#7a6a5a", borderBottom: tab===id ? "2px solid #e9c46a" : "2px solid transparent", background: "none", border: "none", borderBottom: tab===id ? "2px solid #e9c46a" : "2px solid transparent", cursor: "pointer", fontFamily: "inherit", fontWeight: tab===id ? 600 : 400 }}>{label}</button>
           ))}
         </div>
@@ -150,6 +151,12 @@ export default function App() {
                   {expandedClue===i && <p style={{ margin: "10px 0 0 28px", color: "#c8b89a", fontSize: "0.82rem", lineHeight: 1.7 }}>{c.tip}</p>}
                 </div>
               ))}
+            </div>
+          )}
+
+          {tab === "fichas" && (
+            <div>
+              <Fichas />
             </div>
           )}
 
