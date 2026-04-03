@@ -2,269 +2,376 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const EUROPE_IDS = new Set([
   8,20,40,56,70,100,112,191,196,203,208,233,246,250,276,300,
-  348,352,372,380,428,438,440,442,470,492,498,499,504,528,578,
-  616,620,642,643,674,688,703,705,724,752,756,792,804,807,826,
-  8,292,336,674
+  348,352,372,380,428,438,440,442,470,492,498,499,528,578,
+  616,620,642,643,674,688,703,705,724,752,756,792,804,807,826
 ]);
 
-const NAME_ES = {
-  "Albania":"Albania","Andorra":"Andorra","Austria":"Austria",
-  "Belarus":"Bielorrusia","Belgium":"Bélgica",
-  "Bosnia and Herz.":"Bosnia y Herz.","Bulgaria":"Bulgaria",
-  "Croatia":"Croacia","Cyprus":"Chipre","Czechia":"Chequia",
-  "Czech Rep.":"Chequia","Denmark":"Dinamarca","Estonia":"Estonia",
-  "Finland":"Finlandia","France":"Francia","Germany":"Alemania",
-  "Greece":"Grecia","Hungary":"Hungría","Iceland":"Islandia",
-  "Ireland":"Irlanda","Italy":"Italia","Kosovo":"Kosovo",
-  "Latvia":"Letonia","Liechtenstein":"Liechtenstein",
-  "Lithuania":"Lituania","Luxembourg":"Luxemburgo",
-  "N. Macedonia":"Macedonia del N.","Malta":"Malta",
-  "Moldova":"Moldavia","Monaco":"Mónaco","Montenegro":"Montenegro",
-  "Netherlands":"Países Bajos","Norway":"Noruega","Poland":"Polonia",
-  "Portugal":"Portugal","Romania":"Rumanía","Russia":"Rusia",
-  "San Marino":"San Marino","Serbia":"Serbia","Slovakia":"Eslovaquia",
-  "Slovenia":"Eslovenia","Spain":"España","Sweden":"Suecia",
-  "Switzerland":"Suiza","Turkey":"Turquía","Ukraine":"Ucrania",
-  "United Kingdom":"Reino Unido","Vatican":"Vaticano",
-  "Kosovo":"Kosovo","Gibraltar":"Gibraltar",
-  "North Macedonia":"Macedonia del N.",
+const COUNTRY_DATA = {
+  "Albania":    { es:"Albania",        cap:"Tirana",            flag:"🇦🇱" },
+  "Andorra":    { es:"Andorra",        cap:"Andorra la Vella",  flag:"🇦🇩" },
+  "Austria":    { es:"Austria",        cap:"Viena",             flag:"🇦🇹" },
+  "Belarus":    { es:"Bielorrusia",    cap:"Minsk",             flag:"🇧🇾" },
+  "Belgium":    { es:"Bélgica",        cap:"Bruselas",          flag:"🇧🇪" },
+  "Bosnia and Herz.": { es:"Bosnia y Herz.", cap:"Sarajevo",   flag:"🇧🇦" },
+  "Bulgaria":   { es:"Bulgaria",       cap:"Sofía",             flag:"🇧🇬" },
+  "Croatia":    { es:"Croacia",        cap:"Zagreb",            flag:"🇭🇷" },
+  "Cyprus":     { es:"Chipre",         cap:"Nicosia",           flag:"🇨🇾" },
+  "Czechia":    { es:"Chequia",        cap:"Praga",             flag:"🇨🇿" },
+  "Czech Rep.": { es:"Chequia",        cap:"Praga",             flag:"🇨🇿" },
+  "Denmark":    { es:"Dinamarca",      cap:"Copenhague",        flag:"🇩🇰" },
+  "Estonia":    { es:"Estonia",        cap:"Talín",             flag:"🇪🇪" },
+  "Finland":    { es:"Finlandia",      cap:"Helsinki",          flag:"🇫🇮" },
+  "France":     { es:"Francia",        cap:"París",             flag:"🇫🇷" },
+  "Germany":    { es:"Alemania",       cap:"Berlín",            flag:"🇩🇪" },
+  "Greece":     { es:"Grecia",         cap:"Atenas",            flag:"🇬🇷" },
+  "Hungary":    { es:"Hungría",        cap:"Budapest",          flag:"🇭🇺" },
+  "Iceland":    { es:"Islandia",       cap:"Reikiavik",         flag:"🇮🇸" },
+  "Ireland":    { es:"Irlanda",        cap:"Dublín",            flag:"🇮🇪" },
+  "Italy":      { es:"Italia",         cap:"Roma",              flag:"🇮🇹" },
+  "Kosovo":     { es:"Kosovo",         cap:"Pristina",          flag:"🇽🇰" },
+  "Latvia":     { es:"Letonia",        cap:"Riga",              flag:"🇱🇻" },
+  "Liechtenstein":{ es:"Liechtenstein",cap:"Vaduz",             flag:"🇱🇮" },
+  "Lithuania":  { es:"Lituania",       cap:"Vilna",             flag:"🇱🇹" },
+  "Luxembourg": { es:"Luxemburgo",     cap:"Luxemburgo",        flag:"🇱🇺" },
+  "N. Macedonia":{ es:"Macedonia del N.",cap:"Skopie",          flag:"🇲🇰" },
+  "North Macedonia":{ es:"Macedonia del N.",cap:"Skopie",       flag:"🇲🇰" },
+  "Malta":      { es:"Malta",          cap:"La Valeta",         flag:"🇲🇹" },
+  "Moldova":    { es:"Moldavia",       cap:"Chisináu",          flag:"🇲🇩" },
+  "Monaco":     { es:"Mónaco",         cap:"Mónaco",            flag:"🇲🇨" },
+  "Montenegro": { es:"Montenegro",     cap:"Podgorica",         flag:"🇲🇪" },
+  "Netherlands":{ es:"Países Bajos",   cap:"Ámsterdam",         flag:"🇳🇱" },
+  "Norway":     { es:"Noruega",        cap:"Oslo",              flag:"🇳🇴" },
+  "Poland":     { es:"Polonia",        cap:"Varsovia",          flag:"🇵🇱" },
+  "Portugal":   { es:"Portugal",       cap:"Lisboa",            flag:"🇵🇹" },
+  "Romania":    { es:"Rumanía",        cap:"Bucarest",          flag:"🇷🇴" },
+  "Russia":     { es:"Rusia",          cap:"Moscú",             flag:"🇷🇺" },
+  "San Marino": { es:"San Marino",     cap:"San Marino",        flag:"🇸🇲" },
+  "Serbia":     { es:"Serbia",         cap:"Belgrado",          flag:"🇷🇸" },
+  "Slovakia":   { es:"Eslovaquia",     cap:"Bratislava",        flag:"🇸🇰" },
+  "Slovenia":   { es:"Eslovenia",      cap:"Liubliana",         flag:"🇸🇮" },
+  "Spain":      { es:"España",         cap:"Madrid",            flag:"🇪🇸" },
+  "Sweden":     { es:"Suecia",         cap:"Estocolmo",         flag:"🇸🇪" },
+  "Switzerland":{ es:"Suiza",          cap:"Berna",             flag:"🇨🇭" },
+  "Turkey":     { es:"Turquía",        cap:"Ankara",            flag:"🇹🇷" },
+  "Ukraine":    { es:"Ucrania",        cap:"Kiev",              flag:"🇺🇦" },
+  "United Kingdom":{ es:"Reino Unido", cap:"Londres",           flag:"🇬🇧" },
+  "Vatican":    { es:"Vaticano",       cap:"Ciudad del Vaticano",flag:"🇻🇦" },
 };
 
-const CAPITALS = {
-  "Albania":"Tirana","Andorra":"Andorra la Vella","Austria":"Viena",
-  "Belarus":"Minsk","Belgium":"Bruselas","Bosnia and Herz.":"Sarajevo",
-  "Bulgaria":"Sofía","Croatia":"Zagreb","Cyprus":"Nicosia",
-  "Czechia":"Praga","Czech Rep.":"Praga","Denmark":"Copenhague",
-  "Estonia":"Talín","Finland":"Helsinki","France":"París",
-  "Germany":"Berlín","Greece":"Atenas","Hungary":"Budapest",
-  "Iceland":"Reikiavik","Ireland":"Dublín","Italy":"Roma",
-  "Kosovo":"Pristina","Latvia":"Riga","Liechtenstein":"Vaduz",
-  "Lithuania":"Vilna","Luxembourg":"Luxemburgo",
-  "N. Macedonia":"Skopie","Malta":"La Valeta","Moldova":"Chisináu",
-  "Monaco":"Mónaco","Montenegro":"Podgorica",
-  "Netherlands":"Ámsterdam","Norway":"Oslo","Poland":"Varsovia",
-  "Portugal":"Lisboa","Romania":"Bucarest","Russia":"Moscú",
-  "San Marino":"San Marino","Serbia":"Belgrado",
-  "Slovakia":"Bratislava","Slovenia":"Liubliana","Spain":"Madrid",
-  "Sweden":"Estocolmo","Switzerland":"Berna","Turkey":"Ankara",
-  "Ukraine":"Kiev","United Kingdom":"Londres","Vatican":"Ciudad del Vaticano",
-  "North Macedonia":"Skopie",
-};
+const getES = n => COUNTRY_DATA[n]?.es || n;
+const getFlag = n => COUNTRY_DATA[n]?.flag || "";
+const getCap = n => COUNTRY_DATA[n]?.cap || "—";
 
 export default function EuropaMap() {
   const svgRef = useRef(null);
   const gRef = useRef(null);
-  const [mode, setMode] = useState("explore");
-  const [info, setInfo] = useState(null);
-  const [seen, setSeen] = useState({});
+  const zoomRef = useRef(null);
+  const [mode, setMode] = useState("pin");
+  const [phase, setPhase] = useState("start"); // start | playing | result
   const [countries, setCountries] = useState([]);
-  const [quiz, setQuiz] = useState({ queue:[], idx:0, correct:0, wrong:0 });
-  const [answered, setAnswered] = useState({});
-  const [feedback, setFeedback] = useState(null);
-  const [done, setDone] = useState(false);
   const [libs, setLibs] = useState(null);
-  const fbTimer = useRef(null);
-  const transformRef = useRef({k:1,x:0,y:0});
+
+  // PIN state
+  const [queue, setQueue] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [correct, setCorrect] = useState([]);
+  const [missed, setMissed] = useState({});
+  const [flash, setFlash] = useState(null); // { name, ok }
+  const [timer, setTimer] = useState(0);
+  const timerRef = useRef(null);
+  const flashRef = useRef(null);
+
+  // Explore state
+  const [hovered, setHovered] = useState(null);
+  const [seen, setSeen] = useState({});
 
   useEffect(() => {
-    let d3mod, topo;
     Promise.all([
       import("https://cdn.jsdelivr.net/npm/d3@7/+esm"),
       import("https://cdn.jsdelivr.net/npm/topojson-client@3/+esm"),
-    ]).then(([d3, topojsonMod]) => {
-      d3mod = d3; topo = topojsonMod;
-      setLibs({ d3: d3mod, topo });
+    ]).then(([d3, topo]) => {
+      setLibs({ d3, topo });
       return fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json");
     }).then(r => r.json()).then(world => {
-      const features = topo.feature(world, world.objects.countries).features;
-      const europe = features.filter(f => EUROPE_IDS.has(Number(f.id)));
-      setCountries(europe);
-    });
+      const [d3mod, topoMod] = [window.__d3, window.__topo];
+      import("https://cdn.jsdelivr.net/npm/topojson-client@3/+esm").then(topo => {
+        import("https://cdn.jsdelivr.net/npm/d3@7/+esm").then(d3 => {
+          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json")
+            .then(r=>r.json()).then(world => {
+              const feats = topo.feature(world, world.objects.countries).features;
+              setCountries(feats.filter(f => EUROPE_IDS.has(Number(f.id))));
+              setLibs({d3,topo});
+            });
+        });
+      });
+    }).catch(()=>{});
   }, []);
 
-  const getColor = useCallback((name) => {
-    if (mode === "explore") return seen[name] ? "#5DCAA5" : "#B5D4F4";
-    if (answered[name] === "correct") return "#5DCAA5";
-    if (answered[name] === "wrong") return "#F09595";
-    return "#B5D4F4";
-  }, [mode, seen, answered]);
-
   useEffect(() => {
+    if (!libs) {
+      import("https://cdn.jsdelivr.net/npm/d3@7/+esm").then(d3 => {
+        import("https://cdn.jsdelivr.net/npm/topojson-client@3/+esm").then(topo => {
+          fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json")
+            .then(r=>r.json()).then(world => {
+              const feats = topo.feature(world, world.objects.countries).features;
+              setCountries(feats.filter(f => EUROPE_IDS.has(Number(f.id))));
+              setLibs({d3,topo});
+            });
+        });
+      });
+    }
+  }, []);
+
+  const buildMap = useCallback(() => {
     if (!libs || !svgRef.current || countries.length === 0) return;
-    const { d3, topo } = libs;
-    const svg = d3.select(svgRef.current);
-    const container = svgRef.current.parentElement;
-    const W = container.clientWidth || 500;
-    const H = Math.round(W * 0.82);
-    svg.attr("width", W).attr("height", H).attr("viewBox", `0 0 ${W} ${H}`);
-
-    const projection = d3.geoMercator()
-      .center([13, 52])
-      .scale(W * 1.15)
-      .translate([W / 2, H / 2]);
-    const path = d3.geoPath().projection(projection);
-
+    const { d3 } = libs;
+    const el = svgRef.current;
+    const W = el.parentElement.clientWidth || 500;
+    const H = Math.round(W * 0.78);
+    const svg = d3.select(el).attr("width",W).attr("height",H).attr("viewBox",`0 0 ${W} ${H}`);
     svg.selectAll("*").remove();
-    svg.append("rect").attr("width", W).attr("height", H).attr("fill", "#c8dbe8");
+    svg.append("rect").attr("width",W).attr("height",H).attr("fill","#aac8e0");
 
+    const proj = d3.geoMercator().center([13,52]).scale(W*1.15).translate([W/2,H/2]);
+    const path = d3.geoPath().projection(proj);
     const g = svg.append("g");
     gRef.current = g;
 
-    g.selectAll("path")
-      .data(countries)
-      .join("path")
-      .attr("class", d => "country-path cp-" + (d.properties?.name||"").replace(/\s/g,"_"))
+    g.selectAll("path").data(countries).join("path")
       .attr("d", path)
-      .attr("fill", d => getColor(d.properties?.name || ""))
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 0.5)
-      .style("cursor", "pointer")
-      .on("mouseenter", function(event, d) {
-        const name = d.properties?.name || "";
-        if (!seen[name] && mode === "explore") {
-          d3.select(this).attr("fill", "#378ADD");
-        }
-        const esName = NAME_ES[name] || name;
-        d3.select(this).attr("stroke-width", 1.5);
-        svg.select("#tooltip")
-          .attr("display", null)
-          .attr("transform", `translate(${event.offsetX + 10},${event.offsetY - 10})`)
-          .select("text").text(esName);
-      })
-      .on("mousemove", function(event) {
-        svg.select("#tooltip")
-          .attr("transform", `translate(${event.offsetX + 10},${event.offsetY - 10})`);
-      })
-      .on("mouseleave", function(event, d) {
-        const name = d.properties?.name || "";
-        d3.select(this).attr("fill", getColor(name)).attr("stroke-width", 0.5);
-        svg.select("#tooltip").attr("display", "none");
-      })
-      .on("click", function(event, d) {
-        event.stopPropagation();
-        const name = d.properties?.name || "";
-        handleClick(name);
-      });
+      .attr("class", d => "cp")
+      .attr("data-name", d => d.properties?.name||"")
+      .attr("fill", "#3a7d44")
+      .attr("stroke","#fff").attr("stroke-width",0.6)
+      .style("cursor","pointer");
 
-    const tooltip = svg.append("g").attr("id","tooltip").attr("display","none");
-    tooltip.append("rect").attr("rx",4).attr("ry",4).attr("fill","rgba(0,0,0,0.75)").attr("width",120).attr("height",22).attr("y",-18);
-    tooltip.append("text").attr("fill","#fff").attr("font-size",11).attr("y",-4).attr("x",6);
-
-    const zoom = d3.zoom()
-      .scaleExtent([0.8, 12])
-      .on("zoom", (event) => {
-        transformRef.current = event.transform;
-        g.attr("transform", event.transform);
-        tooltip.attr("display","none");
-      });
+    const zoom = d3.zoom().scaleExtent([0.7,14]).on("zoom", e => g.attr("transform",e.transform));
+    zoomRef.current = zoom;
     svg.call(zoom);
-    svg.call(zoom.transform, d3.zoomIdentity.translate(transformRef.current.x, transformRef.current.y).scale(transformRef.current.k));
 
-    svg.append("g").attr("id","zoom-btns").attr("transform",`translate(${W-44},${H-90})`)
-      .selectAll("g").data([{label:"+",dy:0,delta:1.5},{label:"−",dy:42,delta:1/1.5}]).join("g")
-      .attr("transform", d=>`translate(0,${d.dy})`)
-      .call(g2 => {
-        g2.append("rect").attr("width",32).attr("height",32).attr("rx",6).attr("fill","white").attr("stroke","rgba(0,0,0,0.15)").attr("stroke-width",0.5).style("cursor","pointer");
-        g2.append("text").text(d=>d.label).attr("x",16).attr("y",21).attr("text-anchor","middle").attr("font-size",18).attr("fill","#333").style("pointer-events","none");
-        g2.on("click", (event, d) => {
-          svg.transition().duration(250).call(zoom.scaleBy, d.delta);
-        });
-      });
+    const zoomG = svg.append("g").attr("transform",`translate(${W-44},${H-80})`);
+    [{l:"+",dy:0,f:1.5},{l:"−",dy:38,f:1/1.5}].forEach(({l,dy,f}) => {
+      const bg = zoomG.append("g").attr("transform",`translate(0,${dy})`).style("cursor","pointer");
+      bg.append("rect").attr("width",30).attr("height",30).attr("rx",6).attr("fill","white").attr("fill-opacity",0.85).attr("stroke","rgba(0,0,0,0.2)").attr("stroke-width",0.5);
+      bg.append("text").text(l).attr("x",15).attr("y",21).attr("text-anchor","middle").attr("font-size",18).attr("fill","#333").style("pointer-events","none");
+      bg.on("click", () => svg.transition().duration(220).call(zoom.scaleBy, f));
+    });
+  }, [libs, countries]);
 
-  }, [libs, countries, mode, seen, answered]);
+  useEffect(() => { buildMap(); }, [buildMap]);
 
-  const handleClick = useCallback((name) => {
-    if (mode === "explore") {
-      setSeen(s => ({ ...s, [name]: true }));
-      setInfo({ name: NAME_ES[name] || name, cap: CAPITALS[name] || "—" });
-    } else {
-      if (done || quiz.idx >= quiz.queue.length) return;
-      const target = quiz.queue[quiz.idx];
-      if (name === target) {
-        setAnswered(a => ({ ...a, [name]: "correct" }));
-        setFeedback({ type:"correct", text:"Correcto!" });
-        setQuiz(q => {
-          const ni = q.idx + 1;
-          if (ni >= q.queue.length) setTimeout(() => setDone(true), 700);
-          return { ...q, correct: q.correct+1, idx: ni };
-        });
-        clearTimeout(fbTimer.current);
-        fbTimer.current = setTimeout(() => setFeedback(null), 700);
-      } else {
-        setAnswered(a => ({ ...a, [name]: "wrong" }));
-        setFeedback({ type:"wrong", text:"Ese es " + (NAME_ES[name]||name) });
-        setQuiz(q => ({ ...q, wrong: q.wrong+1 }));
-        clearTimeout(fbTimer.current);
-        fbTimer.current = setTimeout(() => setFeedback(null), 1500);
+  const colorMap = useCallback(() => {
+    if (!gRef.current) return;
+    gRef.current.selectAll("path[data-name]").each(function() {
+      const name = this.getAttribute("data-name");
+      let fill = "#3a7d44";
+      if (phase === "playing" || phase === "result") {
+        if (correct.includes(name)) fill = "#1a5c28";
+        else if (missed[name]) fill = "#c0392b";
+        else fill = "#3a7d44";
       }
-    }
-  }, [mode, done, quiz]);
+      if (flash?.name === name) fill = flash.ok ? "#f1c40f" : "#e74c3c";
+      if (phase === "start" && mode === "explore" && seen[name]) fill = "#5DCAA5";
+      this.style.fill = fill;
+    });
+  }, [phase, correct, missed, flash, mode, seen]);
 
-  const startQuiz = () => {
-    const names = countries.map(c => c.properties?.name).filter(n => NAME_ES[n]);
-    const q = [...names].sort(() => Math.random()-0.5);
-    setQuiz({ queue:q, idx:0, correct:0, wrong:0 });
-    setAnswered({});
-    setFeedback(null);
-    setDone(false);
-    transformRef.current = {k:1,x:0,y:0};
+  useEffect(() => { colorMap(); }, [colorMap]);
+
+  const attachHandlers = useCallback(() => {
+    if (!gRef.current || !libs) return;
+    const { d3 } = libs;
+    gRef.current.selectAll("path[data-name]")
+      .on("click", function(event, d) {
+        const name = d.properties?.name || this.getAttribute("data-name") || "";
+        if (mode === "explore") {
+          setSeen(s => ({...s,[name]:true}));
+          setHovered({ name: getES(name), cap: getCap(name), flag: getFlag(name) });
+        } else if (phase === "playing") {
+          handlePinClick(name);
+        }
+      })
+      .on("mouseenter", function(event, d) {
+        const name = d.properties?.name || this.getAttribute("data-name") || "";
+        if (mode === "explore") {
+          d3.select(this).style("opacity", 0.75);
+          setHovered({ name: getES(name), cap: getCap(name), flag: getFlag(name) });
+        } else {
+          d3.select(this).style("opacity", 0.75);
+        }
+      })
+      .on("mouseleave", function() {
+        libs.d3.select(this).style("opacity", 1);
+        if (mode === "explore") setHovered(null);
+      });
+  }, [libs, mode, phase]);
+
+  useEffect(() => { attachHandlers(); }, [attachHandlers]);
+
+  const startGame = () => {
+    const names = countries.map(c => c.properties?.name).filter(n => COUNTRY_DATA[n]);
+    const shuffled = [...names].sort(() => Math.random()-0.5);
+    setQueue(shuffled);
+    setIdx(0);
+    setCorrect([]);
+    setMissed({});
+    setFlash(null);
+    setTimer(0);
+    setPhase("playing");
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => setTimer(t => t+1), 1000);
   };
 
-  useEffect(() => {
-    if (mode === "quiz" && countries.length > 0) startQuiz();
-    if (mode === "explore") { setSeen({}); setInfo(null); transformRef.current={k:1,x:0,y:0}; }
-  }, [mode, countries]);
+  const handlePinClick = useCallback((name) => {
+    setQueue(q => {
+      setIdx(i => {
+        if (i >= q.length) return i;
+        const target = q[i];
+        if (name === target) {
+          setCorrect(c => [...c, name]);
+          setFlash({ name, ok: true });
+          clearTimeout(flashRef.current);
+          flashRef.current = setTimeout(() => setFlash(null), 500);
+          const nextIdx = i + 1;
+          if (nextIdx >= q.length) {
+            clearInterval(timerRef.current);
+            setTimeout(() => setPhase("result"), 600);
+          }
+          return nextIdx;
+        } else {
+          setMissed(m => ({...m,[name]:(m[name]||0)+1}));
+          setFlash({ name, ok: false });
+          clearTimeout(flashRef.current);
+          flashRef.current = setTimeout(() => setFlash(null), 600);
+          return i;
+        }
+      });
+      return q;
+    });
+  }, []);
 
-  const pct = quiz.queue.length ? Math.round(quiz.idx/quiz.queue.length*100) : 0;
-  const target = quiz.queue[quiz.idx];
+  useEffect(() => () => { clearInterval(timerRef.current); clearTimeout(flashRef.current); }, []);
+
+  const fmtTime = s => `${Math.floor(s/60).toString().padStart(2,"0")}:${(s%60).toString().padStart(2,"0")}`;
+  const target = queue[idx];
+  const remaining = queue.slice(idx);
+  const totalErrors = Object.values(missed).reduce((a,b)=>a+b,0);
+  const accuracy = queue.length > 0 ? Math.round((correct.length/(correct.length+totalErrors||1))*100) : 100;
 
   return (
-    <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0 8px", flexWrap:"wrap", gap:8 }}>
-        <div style={{ display:"flex", gap:6 }}>
-          {["explore","quiz"].map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{ padding:"6px 16px", borderRadius:8, border:"0.5px solid rgba(0,0,0,0.15)", background:mode===m?"#0a0a0f":"transparent", color:mode===m?"#fff":"#555", fontSize:13, cursor:"pointer", fontFamily:"inherit" }}>
-              {m==="explore"?"Explorar":"Quiz"}
+    <div style={{fontFamily:"Georgia,serif"}}>
+
+      {/* MODE SELECTOR */}
+      <div style={{display:"flex",gap:6,padding:"10px 0 8px",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap"}}>
+        <div style={{display:"flex",gap:6}}>
+          {[["pin","PIN"],["explore","Explorar"]].map(([m,l]) => (
+            <button key={m} onClick={() => { setMode(m); setPhase("start"); clearInterval(timerRef.current); }}
+              style={{padding:"5px 14px",borderRadius:8,border:"0.5px solid rgba(0,0,0,0.2)",background:mode===m?"#1a5c28":"transparent",color:mode===m?"#fff":"#444",fontSize:13,cursor:"pointer",fontFamily:"inherit",fontWeight:mode===m?600:400}}>
+              {l}
             </button>
           ))}
         </div>
-        {mode==="quiz" && !done && (
-          <div style={{ fontSize:12, color:"#777", display:"flex", gap:12 }}>
-            <span>✓ <b style={{color:"#1D9E75"}}>{quiz.correct}</b></span>
-            <span>✗ <b style={{color:"#E24B4A"}}>{quiz.wrong}</b></span>
-            <span>Quedan <b>{quiz.queue.length - quiz.idx}</b></span>
+        {phase==="playing" && (
+          <div style={{display:"flex",gap:12,alignItems:"center",fontSize:13,color:"#444"}}>
+            <span style={{fontVariantNumeric:"tabular-nums",fontWeight:600,color:"#1a5c28"}}>{fmtTime(timer)}</span>
+            <span>{correct.length} / {queue.length}</span>
+            {totalErrors > 0 && <span style={{color:"#c0392b"}}>✗ {totalErrors}</span>}
           </div>
         )}
       </div>
 
-      <div style={{ border:"0.5px solid rgba(0,0,0,0.1)", borderRadius:12, overflow:"hidden" }}>
-        {mode==="quiz" && <div style={{ height:3, background:"#eee" }}><div style={{ height:"100%", width:pct+"%", background:"#1D9E75", transition:"width 0.4s" }} /></div>}
-        <div style={{ position:"relative", lineHeight:0 }}>
-          <svg ref={svgRef} style={{ display:"block", width:"100%", touchAction:"none" }} />
-        </div>
+      {/* MAP */}
+      <div style={{border:"0.5px solid rgba(0,0,0,0.12)",borderRadius:12,overflow:"hidden",background:"#aac8e0"}}>
 
+        {/* PIN BAR */}
+        {mode==="pin" && phase==="playing" && target && (
+          <div style={{background:"#1a2a3a",padding:"10px 16px",display:"flex",alignItems:"center",gap:12,justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:28}}>{getFlag(target)}</span>
+              <div>
+                <div style={{fontSize:11,color:"#aaa",letterSpacing:"0.06em"}}>HAZ CLIC EN</div>
+                <div style={{fontSize:17,fontWeight:700,color:"#fff"}}>{getES(target)}</div>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:16,alignItems:"center"}}>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:11,color:"#aaa"}}>TIEMPO</div>
+                <div style={{fontSize:15,fontWeight:600,color:"#f1c40f",fontVariantNumeric:"tabular-nums"}}>{fmtTime(timer)}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:11,color:"#aaa"}}>PROGRESO</div>
+                <div style={{fontSize:15,fontWeight:600,color:"#fff"}}>{correct.length}/{queue.length}</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* START SCREEN PIN */}
+        {mode==="pin" && phase==="start" && (
+          <div style={{background:"#1a2a3a",padding:"14px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{color:"#fff",fontSize:14,fontWeight:500}}>Modo PIN — Europa: Países</div>
+            <button onClick={startGame}
+              style={{padding:"8px 22px",borderRadius:20,border:"none",background:"#27ae60",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              EMPEZAR
+            </button>
+          </div>
+        )}
+
+        {/* EXPLORE INFO */}
         {mode==="explore" && (
-          <div style={{ padding:"10px 14px", borderTop:"0.5px solid rgba(0,0,0,0.08)", minHeight:48, display:"flex", alignItems:"center", background:"#fff" }}>
-            {info
-              ? <div><div style={{ fontWeight:600, fontSize:15 }}>{info.name}</div><div style={{ fontSize:12, color:"#888", marginTop:2 }}>Capital: {info.cap}</div></div>
-              : <div style={{ fontSize:13, color:"#bbb" }}>Toca un país · Pinch o botones +/− para zoom · Arrastra para mover</div>
+          <div style={{background:"#1a2a3a",padding:"10px 16px",minHeight:48,display:"flex",alignItems:"center",gap:10}}>
+            {hovered
+              ? <>
+                  <span style={{fontSize:24}}>{hovered.flag}</span>
+                  <div>
+                    <div style={{fontWeight:600,fontSize:15,color:"#fff"}}>{hovered.name}</div>
+                    <div style={{fontSize:12,color:"#aaa"}}>Capital: {hovered.cap}</div>
+                  </div>
+                </>
+              : <div style={{fontSize:13,color:"#aaa"}}>Toca un país para ver su nombre y capital</div>
             }
           </div>
         )}
 
-        {mode==="quiz" && !done && target && (
-          <div style={{ padding:"10px 14px", borderTop:"0.5px solid rgba(0,0,0,0.08)", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8, minHeight:48, background:"#fff" }}>
-            <div style={{ fontSize:14, color:"#555" }}>Encuentra: <span style={{ fontWeight:600, color:"#0a0a0f", fontSize:16 }}>{NAME_ES[target]||target}</span></div>
-            {feedback && <div style={{ fontSize:13, padding:"3px 10px", borderRadius:6, background:feedback.type==="correct"?"#E1F5EE":"#FCEBEB", color:feedback.type==="correct"?"#0F6E56":"#A32D2D" }}>{feedback.text}</div>}
+        {/* SVG MAP */}
+        <div style={{position:"relative",lineHeight:0}}>
+          <svg ref={svgRef} style={{display:"block",width:"100%",touchAction:"none"}} />
+        </div>
+
+        {/* PENDING LIST */}
+        {mode==="pin" && phase==="playing" && remaining.length > 0 && (
+          <div style={{background:"#f8f8f6",padding:"8px 12px",borderTop:"0.5px solid rgba(0,0,0,0.08)"}}>
+            <div style={{fontSize:10,color:"#999",letterSpacing:"0.08em",marginBottom:4}}>PENDIENTES ({remaining.length})</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"3px 6px"}}>
+              {remaining.map(n => (
+                <span key={n} style={{fontSize:12,color:"#555"}}>{getES(n)}</span>
+              ))}
+            </div>
           </div>
         )}
 
-        {mode==="quiz" && done && (
-          <div style={{ padding:20, textAlign:"center", borderTop:"0.5px solid rgba(0,0,0,0.08)", background:"#fff" }}>
-            <div style={{ fontSize:14, color:"#666", marginBottom:12 }}>
-              {quiz.correct} correctas · {quiz.wrong} errores · {Math.round(quiz.correct/(quiz.correct+quiz.wrong)*100)}% acierto
+        {/* RESULT */}
+        {phase==="result" && (
+          <div style={{padding:"20px 16px",textAlign:"center",background:"#fff",borderTop:"0.5px solid rgba(0,0,0,0.08)"}}>
+            <div style={{fontSize:32,marginBottom:8}}>🎉</div>
+            <div style={{fontSize:18,fontWeight:600,marginBottom:4}}>¡Completado!</div>
+            <div style={{fontSize:14,color:"#666",marginBottom:16}}>
+              Tiempo: <b>{fmtTime(timer)}</b> · Errores: <b style={{color:totalErrors>0?"#c0392b":"#27ae60"}}>{totalErrors}</b> · Precisión: <b style={{color:"#27ae60"}}>{accuracy}%</b>
             </div>
-            <button onClick={startQuiz} style={{ padding:"8px 20px", borderRadius:8, border:"0.5px solid rgba(0,0,0,0.15)", background:"transparent", fontSize:13, cursor:"pointer" }}>Repetir</button>
+            {Object.keys(missed).length > 0 && (
+              <div style={{marginBottom:16,textAlign:"left",background:"#fff5f5",borderRadius:8,padding:"10px 14px"}}>
+                <div style={{fontSize:11,color:"#c0392b",letterSpacing:"0.06em",marginBottom:6}}>FALLASTE EN</div>
+                <div style={{display:"flex",flexWrap:"wrap",gap:"4px 10px"}}>
+                  {Object.keys(missed).map(n => (
+                    <span key={n} style={{fontSize:13,color:"#c0392b"}}>{getFlag(n)} {getES(n)}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <button onClick={startGame}
+              style={{padding:"10px 28px",borderRadius:20,border:"none",background:"#27ae60",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              REPETIR
+            </button>
           </div>
         )}
       </div>
