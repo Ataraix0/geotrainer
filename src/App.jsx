@@ -1,6 +1,7 @@
 import { useState } from "react";
 import EuropaMap from "./EuropaMap.jsx";
 import Fichas from "./Fichas.jsx";
+import MapaFichas from "./MapaFichas.jsx";
 
 const regions = [
   { name: "Europa del Este", emoji: "🇷🇴", color: "#e63946", premium: false, clues: [
@@ -156,6 +157,8 @@ export default function App() {
 
           {tab === "fichas" && (
             <div>
+              <MapaFichas />
+              <div style={{ margin:"24px 0 10px", height:"1px", background:"rgba(255,255,255,0.06)" }} />
               <Fichas />
             </div>
           )}
